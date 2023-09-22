@@ -10,9 +10,9 @@ M.options = {
       ft = "NvimTree",
       open = function()
         vim.schedule(function ()
-          local winnr = vim.fn.winnr()
+          local win_id = vim.api.nvim_get_current_win()
           require("nvim-tree.api").tree.focus()
-          vim.cmd((winnr + 1) .. "wincmd w")
+          vim.fn.win_gotoid(win_id)
         end)
       end
     }

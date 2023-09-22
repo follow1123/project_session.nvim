@@ -83,6 +83,24 @@ local function delete_project(prompt_bufnr)
   end
 end
 
+-- 复制项目路径
+local function copy_path(prompt_bufnr)
+  local selectedEntry = state.get_selected_entry(prompt_bufnr)
+  if selectedEntry ~= nil then
+    local value = Session.parse_session_file(selectedEntry.value)
+    vim.fn.setreg("+", value)
+  end
+end
+
+-- 打印项目路径
+local function print_path(prompt_bufnr)
+  local selectedEntry = state.get_selected_entry(prompt_bufnr)
+  if selectedEntry ~= nil then
+    local value = Session.parse_session_file(selectedEntry.value)
+    vim.fn.input(value .. "\n\nPress ENTER or type command to continue")
+  end
+end
+
 local function recent_projects(opts)
   opts = opts or {}
 
@@ -93,6 +111,8 @@ local function recent_projects(opts)
     sorter = telescope_config.generic_sorter(opts),
     attach_mappings = function(prompt_bufnr, map)
       map("i", "<M-d>", delete_project)
+      map("i", "<M-y>", copy_path)
+      map("i", "<M-k>", print_path)
       local on_project_selected = function()
         load_project(prompt_bufnr)
       end
