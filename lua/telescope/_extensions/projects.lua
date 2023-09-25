@@ -60,7 +60,7 @@ local function load_project(prompt_bufnr)
     return
   end
   actions.close(prompt_bufnr)
-  vim.cmd("%bwipeout!") -- 强制清空当前的所有buffer
+  vim.cmd("silent! %bwipeout!") -- 强制清空当前的所有buffer
   Session.load_session(selected_entry.value)
 end
 
@@ -72,7 +72,7 @@ local function delete_project(prompt_bufnr)
     return
   end
 
-  local choice = vim.fn.confirm("Delete '" .. selectedEntry.value .. "' from project list?", "&yes\n&no", 2)
+  local choice = vim.fn.confirm("Delete '" ..  Session.parse_session_file(selectedEntry.value) .. "' from project list?", "&yes\n&no", 2)
   if choice == 1 then
     Project.delete_project(selectedEntry.value)
 

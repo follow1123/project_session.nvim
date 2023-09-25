@@ -26,16 +26,21 @@ end
 
 -- 保存session，只保存已存在的session
 M.save = function()
-  local cwd = vim.fn.getcwd()
-  local session_dir = Config.options.dir
-  local session_file = vim.fs.normalize(session_dir .. "/" .. Session.get_session_file_name(cwd))
-  local result = vim.tbl_filter(function(file)
-    return vim.fn.fnameescape(vim.fs.normalize(file)) == vim.fn.fnameescape(session_file)
-  end, Session.list_sessions(session_dir))
-  if result and #result > 0 then
-    Session.save_session(session_file, Config.options.options)
-    Config.mks_plugin(session_file)
-  end
+  Project.save_project(vim.fn.getcwd())
+end
+
+-- 添加项目
+M.add = function ()
+  Project.add_project(vim.fn.getcwd())
+end
+
+-- 打开项目
+M.open = function()
+  vim.ui.input({ prompt = "input project path", }, function(path)
+    if path then
+      Project.open_project(path)
+    end
+  end)
 end
 
 -- 开启保存session的操作
@@ -55,5 +60,12 @@ end
 vim.api.nvim_create_user_command("ProjectAdd", Project.add_project, {
   desc = "add current project to list"
 })
+
+vim.api.nvim_create_user_command("ProjectOpen", function(o)
+  Project.open_project(o.args)
+end, {
+    desc = "add current project to list",
+    nargs = "?"
+  })
 
 return M

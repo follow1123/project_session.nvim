@@ -23,6 +23,18 @@
   dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"), --sessions 保存路径
   options = { "buffers", "curdir", "tabpages", "winsize" }, -- 保存选项，参考vim.opt.sessionoptions
   patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" }, -- 根据这些文件判断是项目的根目录
+  open_project_method = function(root_dir) -- 打开项目时打开文件夹的方式
+    local ok, api = pcall(require, "nvim-tree.api")
+    if ok then
+      api.tree.open({
+        path = root_dir,
+        winid = vim.api.nvim_get_current_win(),
+        find_file = false,
+        update_root = false,
+      })
+      return
+    end
+  end,
   -- 插件窗口配置
   pluginwins = {
     ["nvim-tree"] = { -- nvim-tree插件配置
@@ -55,6 +67,8 @@ require("nvim-tree").setup {
 
 ### Telescope集成
 
+> **注意** 使用Telescope窗口选择项目打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
+
 ```lua
 require("telescope").load_extension("projects")
 ```
@@ -82,6 +96,20 @@ require("telescope").extensions.projects.recent_projects()
 require("project_session").save()
 ```
 
+* 添加项目
+
+> 功能和`ProjectAdd`一样
+
+```lua
+require("project_session").add()
+```
+
+* 打开项目
+
+> 使用vim.ui.input方式输入项目路径，打开项目并使用目录树插件或netrw打开对应目录，如果路径是文件则直接打开  
+> 目录树插件打开方式在`open_project_method`函数内配置  
+> **注意** 打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
+
 * 加载最近的一个项目
 
 ```lua
@@ -94,6 +122,16 @@ require("project_session").load_last()
 
 ```lua
 ProjectAdd
+```
+
+* 打开项目
+
+> 接受一个参数作为项目路径，打开项目并使用目录树插件或netrw打开对应目录，如果路径是文件则直接打开  
+> 目录树插件打开方式在`open_project_method`函数内配置  
+> **注意** 打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
+
+```lua
+ProjectOpen {path}
 ```
 ## 参考插件
 

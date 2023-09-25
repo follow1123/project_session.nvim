@@ -4,6 +4,18 @@ M.options = {
   dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
   options = { "buffers", "curdir", "tabpages", "winsize" },
   patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" },
+  open_project_method = function(root_dir)
+    local ok, api = pcall(require, "nvim-tree.api")
+    if ok then
+      api.tree.open({
+        path = root_dir,
+        winid = vim.api.nvim_get_current_win(),
+        find_file = false,
+        update_root = false,
+      })
+      return
+    end
+  end,
   -- 插件窗口配置
   pluginwins = {
     ["nvim-tree"] = {
