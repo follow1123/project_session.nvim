@@ -4,9 +4,9 @@ local Project = require("project_session.project")
 local M = {}
 
 M.setup = function(opts)
-  M.options = vim.tbl_deep_extend("force", {}, Config.options, opts or {})
-  if vim.fn.isdirectory(M.options.dir) == 0 then
-    vim.fn.mkdir(M.options.dir, "p")
+  Config.options = vim.tbl_deep_extend("force", {}, Config.options, opts or {})
+  if vim.fn.isdirectory(Config.options.dir) == 0 then
+    vim.fn.mkdir(Config.options.dir, "p")
   end
   M.start()
 end
