@@ -36,11 +36,18 @@ end
 
 -- 打开项目
 M.open = function()
-  vim.ui.input({ prompt = "input project path", }, function(path)
-    if path then
-      Project.open_project(path)
+  vim.ui.input(
+    {
+      prompt = "input project path",
+      completion = "file",
+      kind = "projectsession"
+    },
+    function(path)
+      if path then
+        Project.open_project(path)
+      end
     end
-  end)
+  )
 end
 
 -- 开启保存session的操作
@@ -61,11 +68,14 @@ vim.api.nvim_create_user_command("ProjectAdd", Project.add_project, {
   desc = "add current project to list"
 })
 
-vim.api.nvim_create_user_command("ProjectOpen", function(o)
-  Project.open_project(o.args)
-end, {
+vim.api.nvim_create_user_command("ProjectOpen",
+  function(o)
+    Project.open_project(o.args)
+  end,
+  {
     desc = "add current project to list",
     nargs = "?"
-  })
+  }
+)
 
 return M
