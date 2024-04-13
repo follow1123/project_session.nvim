@@ -60,6 +60,14 @@ local function load_project(prompt_bufnr)
     return
   end
   actions.close(prompt_bufnr)
+
+  -- 执行打开项目前操作
+  local is_continue = Project.before_open_project()
+
+  if not is_continue then
+    return
+  end
+
   vim.cmd("silent! %bwipeout!") -- 强制清空当前的所有buffer
   Session.load_session(selected_entry.value)
 end
