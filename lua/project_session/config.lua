@@ -1,71 +1,67 @@
+---@class TreeConfig
+---@field plugin_name string
+---@field ft string
+---@field on_open_dir function?
+---@field on_restore function?
+
+---@class ProjectSessionOpts
+---@field dir string? session file storage directory
+---@field session_opts table<string>? vim builtin option use "h 'sessionoptions'" to get help
+---@field project_patterns table<string>? match project root directory
+---@field file_tree "nvim-tree"|TreeConfig|nil open file tree plugin options
+
 local M = {}
 
-M.options = {
-  dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
-  options = { "buffers", "curdir", "tabpages", "winsize" },
-  patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" },
-  open_project_method = function(root_dir)
-    local ok, api = pcall(require, "nvim-tree.api")
-    if ok then
+---@type table<string, TreeConfig>
+local tree_config = {
+  ["nvim-tree"] = {
+    plugin_name = "nvim-tree",
+    ft = "NvimTree",
+    on_open_dir = function(root_dir)
+      local ok, api = pcall(require, "nvim-tree.api")
+      if not ok then return end
       api.tree.open({
         path = root_dir,
         winid = vim.api.nvim_get_current_win(),
         find_file = false,
         update_root = false,
       })
-      return
+    end,
+    on_restore = function()
+      vim.schedule(function ()
+        local ok, api = pcall(require, "nvim-tree.api")
+        if not ok then return end
+        local win_id = vim.api.nvim_get_current_win()
+        api.tree.focus()
+        vim.fn.win_gotoid(win_id)
+      end)
     end
-  end,
-  -- 插件窗口配置
-  pluginwins = {
-    ["nvim-tree"] = {
-      ft = "NvimTree",
-      open = function()
-        vim.schedule(function ()
-          local win_id = vim.api.nvim_get_current_win()
-          require("nvim-tree.api").tree.focus()
-          vim.fn.win_gotoid(win_id)
-        end)
-      end
-    }
   }
 }
 
--- 判断当前窗口内是否又某个类型的buffer
-local function match_visible_win(filetype)
-  local win_list = vim.api.nvim_list_wins()
-  for _, win_id in ipairs(win_list) do
-    local bufnr = vim.api.nvim_win_get_buf(win_id)
-      if filetype == vim.api.nvim_buf_get_option(bufnr, "filetype") then
-      return true
-    end
-  end
-  return false
-end
+---@type ProjectSessionOpts
+local default_options = {
+  dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
+  session_opts = { "buffers", "curdir", "tabpages", "winsize", "folds" },
+  project_patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" },
+  file_tree = nil
+}
 
--- 追加内容
-local function append(path, data)
-  local uv = vim.loop
-  local file  = uv.fs_open(path, "a", 660)
-  if file then
-    uv.fs_write(file, data, -1, function(err)
-      if err then
-        vim.notify(err, vim.log.levels.WARN)
-      end
-      uv.fs_close(file)
-    end)
-  end
-end
+---@type ProjectSessionOpts
+M.options = nil
 
--- 创建插件窗口的session
-M.mks_plugin = function(session_file)
-  local pluginwins =  M.options.pluginwins or {}
-  for plugin, value in pairs(pluginwins) do
-    if package.loaded[plugin] and value and value.ft and value.open and match_visible_win(value.ft) then
-      local cmd = string.format("lua require('project_session.config').options.pluginwins[\"%s\"].open()", plugin)
-      append(session_file, cmd)
-    end
+---@param opt ProjectSessionOpts?
+function M.setup(opt)
+  opt = opt or {}
+  if type(opt.file_tree) == "string" then
+    opt.file_tree = tree_config[opt.file_tree]
   end
+  M.options = vim.tbl_deep_extend("force", {}, default_options, opt)
+  local dir = vim.fs.normalize(M.options.dir)
+  if not string.match(dir, "/$") then
+    dir =  dir .. "/"
+  end
+  M.options.dir = dir
 end
 
 return M

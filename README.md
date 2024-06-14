@@ -18,42 +18,26 @@
 ## 配置
 
 ### 默认配置
+
 ```lua
 {
-  dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"), --sessions 保存路径
-  options = { "buffers", "curdir", "tabpages", "winsize" }, -- 保存选项，参考vim.opt.sessionoptions
-  patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" }, -- 根据这些文件判断是项目的根目录
-  open_project_method = function(root_dir) -- 打开项目时打开文件夹的方式
-    local ok, api = pcall(require, "nvim-tree.api")
-    if ok then
-      api.tree.open({
-        path = root_dir,
-        winid = vim.api.nvim_get_current_win(),
-        find_file = false,
-        update_root = false,
-      })
-      return
-    end
-  end,
-  -- 插件窗口配置
-  pluginwins = {
-    ["nvim-tree"] = { -- nvim-tree插件配置
-      ft = "NvimTree", -- nvim-tree窗口buffer的文件类型
-      open = function() -- 打开nvim-tree窗口的方式，这个方法会直接在session文件内调用
-        vim.schedule(function ()
-          local winnr = vim.fn.winnr() -- 保存光标位置
-          require("nvim-tree.api").tree.focus()
-          vim.cmd((winnr + 1) .. "wincmd w") -- 恢复光标
-        end)
-      end
-    }
-  }
+  dir = vim.fn.expand(vim.fn.stdpath("state") .. "/sessions/"),
+  session_opts = { "buffers", "curdir", "tabpages", "winsize", "folds" },
+  project_patterns = { "cargo.toml", "package.json", "makefile", "lua", "lazy-lock.json", ".git" },
+  file_tree = nil
 }
 ```
 
-### [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua)配置
+### [nvim-tree](https://github.com/nvim-tree/nvim-tree.lua)集成 (可选)
 
 ```lua
+-- project_session.nvim插件配置
+{
+  -- ...
+  file_tree = "nvim-tree"
+}
+
+-- nvim-tree插件配置
 require("nvim-tree").setup {
   sync_root_with_cwd = true,
   respect_buf_cwd = true,
@@ -66,8 +50,6 @@ require("nvim-tree").setup {
 ```
 
 ### Telescope集成
-
-> **注意** 使用Telescope窗口选择项目打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
 
 ```lua
 require("telescope").load_extension("projects")
@@ -107,8 +89,10 @@ require("project_session").add()
 * 打开项目
 
 > 使用vim.ui.input方式输入项目路径，打开项目并使用目录树插件或netrw打开对应目录，如果路径是文件则直接打开  
-> 目录树插件打开方式在`open_project_method`函数内配置  
-> **注意** 打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
+
+```lua
+require("project_session").open()
+```
 
 * 加载最近的一个项目
 
@@ -127,8 +111,6 @@ ProjectAdd
 * 打开项目
 
 > 接受一个参数作为项目路径，打开项目并使用目录树插件或netrw打开对应目录，如果路径是文件则直接打开  
-> 目录树插件打开方式在`open_project_method`函数内配置  
-> **注意** 打开时会将当前项目的所有buffer强制删除，需要先保存当前项目的所有文件
 
 ```lua
 ProjectOpen {path}

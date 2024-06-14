@@ -1,81 +1,74 @@
-local Session = require("project_session.session")
-local Config = require("project_session.config")
-local Project = require("project_session.project")
+local config = require("project_session.config")
+local core = require("project_session.core")
+
 local M = {}
 
-M.setup = function(opts)
-  Config.options = vim.tbl_deep_extend("force", {}, Config.options, opts or {})
-  if vim.fn.isdirectory(Config.options.dir) == 0 then
-    vim.fn.mkdir(Config.options.dir, "p")
+---@param opts ProjectSessionOpts?
+function M.setup(opts)
+  config.setup(opts)
+  if vim.fn.isdirectory(config.options.dir) == 0 then
+    vim.fn.mkdir(config.options.dir, "p")
   end
   M.start()
 end
 
--- 加载上次的session
-M.load_last = function()
-  local sessions = Session.list_sessions(Config.options.dir)
-  if not sessions or #sessions == 0 then
-    vim.notify("no sessions", vim.log.levels.WARN)
+---load last project
+function M.load_last()
+  local projects = core.list_projects()
+  if vim.fn.empty(projects) == 1 then
+    vim.notify("no projects", vim.log.levels.WARN)
     return
   end
-  table.sort(sessions, function(a, b)
-    return vim.loop.fs_stat(a).mtime.sec > vim.loop.fs_stat(b).mtime.sec
-  end)
-  Session.load_session(sessions[1])
+  core.open_project(projects[1])
 end
 
--- 保存session，只保存已存在的session
-M.save = function()
-  Project.save_project(vim.fn.getcwd())
-end
+---save session only save existing session
+function M.save() core.save_project() end
 
--- 添加项目
-M.add = function ()
-  Project.add_project(vim.fn.getcwd())
-end
+---add project
+M.add = core.add_project
 
--- 打开项目
-M.open = function()
+
+---open project
+function M.open()
   vim.ui.input(
     {
-      prompt = "input project path",
+      prompt = "Input project path: ",
       completion = "file",
       kind = "projectsession"
     },
     function(path)
-      if path then
-        Project.open_project(path)
-      end
-    end
-  )
+      if not path or vim.fn.empty(vim.trim(path)) == 1 then return end
+      path = vim.fn.fnamemodify(path, ":p")
+      core.open_project(path)
+    end)
 end
 
--- 开启保存session的操作
-M.start = function()
+---enable session saving
+function M.start()
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = vim.api.nvim_create_augroup("project_session", { clear = true }),
     callback = M.save
   })
 end
 
--- 关闭保存session的操作
-M.stop = function()
+---disable session saving
+function M.stop()
   pcall(vim.api.nvim_del_augroup_by_name, "project_session")
 end
 
--- 添加当前项目到项目列表
-vim.api.nvim_create_user_command("ProjectAdd", Project.add_project, {
-  desc = "add current project to list"
-})
+---add to project list
+vim.api.nvim_create_user_command("ProjectAdd", core.add_project,
+  { desc = "add project to session list" })
 
+---open project command
 vim.api.nvim_create_user_command("ProjectOpen",
-  function(o)
-    Project.open_project(o.args)
+  function(args)
+    local path = args.args
+    if not path or vim.fn.empty(vim.trim(path)) == 1 then return end
+    path = vim.fn.fnamemodify(path, ":p")
+    core.open_project(path)
   end,
-  {
-    desc = "add current project to list",
-    nargs = "?"
-  }
-)
+  { nargs = "?", complete = "file", desc = "open project" })
 
 return M
