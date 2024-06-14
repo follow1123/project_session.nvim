@@ -28,6 +28,29 @@ function M.save() core.save_project() end
 ---add project
 M.add = core.add_project
 
+function M.recent_projects()
+  local projects = core.list_projects()
+
+  local indent_len = 0
+  for _, project in ipairs(projects) do
+    indent_len = math.max(indent_len, #project.name)
+  end
+  indent_len = indent_len + 1
+
+  vim.ui.select(projects,
+    {
+      prompt = "Recent projects: ",
+      format_item = function(item)
+        return string.format("%s%s[%s]",
+          item.name, string.rep(" ", indent_len - #item.name), item.full_path)
+      end
+    },
+    function(item)
+      if item then
+        core.open_project(item)
+      end
+    end)
+end
 
 ---open project
 function M.open()
@@ -70,5 +93,35 @@ vim.api.nvim_create_user_command("ProjectOpen",
     core.open_project(path)
   end,
   { nargs = "?", complete = "file", desc = "open project" })
+
+---delete project command no args will delete current project
+vim.api.nvim_create_user_command("ProjectDelete",
+  function(args)
+    local path = args.args
+    if not path or vim.fn.empty(vim.trim(path)) == 1 then
+      path = vim.fn.getcwd()
+    end
+    path = vim.fn.fnamemodify(path, ":p")
+
+    local project_filtered = vim.tbl_filter(function(project)
+      return vim.fs.normalize(path) == project.full_path
+    end, core.list_projects())
+
+    if vim.fn.empty(project_filtered) == 1 then
+      vim.notify(
+        string.format(
+          "project: '%s' not in project list", path), vim.log.levels.WARN)
+      return
+    end
+    core.delete_project(path)
+  end,
+  {
+    nargs = "?", desc = "open project",
+    complete = function ()
+      return vim.tbl_map(function(project)
+        return project.full_path
+      end, core.list_projects())
+    end
+  })
 
 return M

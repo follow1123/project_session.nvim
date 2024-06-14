@@ -166,4 +166,10 @@ function M.list_projects()
   return project_list
 end
 
+---delete project
+---@param path string
+function M.delete_project(path)
+  Project:from_path(config.options.dir, path):delete(true)
+end
+
 return M

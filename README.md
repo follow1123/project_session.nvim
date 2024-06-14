@@ -99,6 +99,13 @@ require("project_session").open()
 ```lua
 require("project_session").load_last()
 ```
+* 列出所有项目
+
+> 在没用telescope插件情况下使用，调用vim.ui.select()选择项目
+
+```lua
+require("project_session").recent_projects()
+```
 
 ## Command
 
@@ -115,6 +122,15 @@ ProjectAdd
 ```lua
 ProjectOpen {path}
 ```
+
+* 删除项目
+
+> tab补全所有项目，默认删除当前项目
+
+```lua
+ProjectDelete {path}
+```
+
 ## 参考插件
 
 > 整合了以下两个插件的部分功能
