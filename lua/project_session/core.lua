@@ -74,7 +74,7 @@ local function check_unsaved_file()
     unsaved_files .. "these file not save", "&ok\n&save all\n&ignore", 1)
 
   if choice == 2 then
-    vim.cmd(":wa")
+    vim.cmd.wa()
     return true
   end
   if choice == 3 then return true end
@@ -126,7 +126,7 @@ function M.open_project(project)
     project = Project:from_path(config.options.dir, root_dir)
 
     if vim.fn.isdirectory(path) == 0 then
-      vim.cmd("e " .. path)
+      vim.cmd.e(path)
     end
 
     -- way to open directory
@@ -134,7 +134,7 @@ function M.open_project(project)
       type(config.options.file_tree.on_open_dir) == "function" then
       config.options.file_tree.on_open_dir(root_dir)
     else
-      vim.cmd("E " .. path)
+      vim.cmd({ cmd = "E", args = { path } })
     end
     vim.api.nvim_set_current_dir(project.full_path)
     project:save(config.options.session_opts)

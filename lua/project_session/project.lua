@@ -38,7 +38,10 @@ function Project:save(session_opts, notify)
   if vim.fn.empty(session_opts) ~= 1 then
     vim.opt.sessionoptions = session_opts
   end
-  vim.cmd("mks! " .. vim.fn.fnameescape(self.session_file))
+  vim.cmd.mksession({
+    args = { vim.fn.fnameescape(self.session_file) },
+    bang = true
+  })
   vim.opt.sessionoptions = def_opts
 
   if notify then
@@ -73,7 +76,10 @@ function Project:load()
     vim.notify("session file not exists", vim.log.levels.WARN)
     return
   end
-  vim.cmd("silent! source " .. vim.fn.fnameescape(self.session_file))
+  vim.cmd.source({
+    args = { vim.fn.fnameescape(self.session_file) },
+    mods = { silent = true }
+  })
 end
 
 return Project
