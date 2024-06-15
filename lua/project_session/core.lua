@@ -86,15 +86,14 @@ local function stop_lsp()
   local ok = pcall(vim.lsp.stop_client, vim.lsp.get_active_clients())
   if not ok then return end
 
-  -- wait for lsp shut down completely, timeout about 3 second
-  -- local mill = 0
-  -- while true do
-  --   local clients = vim.lsp.get_active_clients()
-  --   if not clients or #clients == 0 then break end
-  --   vim.wait(0)
-  --   mill = mill + 1
-  --   if mill == 100 then break end
-  -- end
+  -- wait for lsp shut down completely
+  local mill = 0
+  while mill < 300 do
+    local clients = vim.lsp.get_active_clients()
+    if not clients or #clients == 0 then break end
+    vim.wait(1)
+    mill = mill + 1
+  end
 end
 
 ---before open project
@@ -118,6 +117,7 @@ function M.open_project(project)
     end
   end
 
+  vim.cmd.clearjumps() -- clear jump list
   vim.cmd("silent! %bwipeout!") -- force clear all buffer
 
   if type(project) == "string" then
