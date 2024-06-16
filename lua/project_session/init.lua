@@ -26,7 +26,7 @@ end
 function M.save() core.save_project() end
 
 ---add project
-M.add = core.add_project
+function M.add() core.add_project(true) end
 
 function M.recent_projects()
   local projects = core.list_projects()
@@ -81,8 +81,14 @@ function M.stop()
 end
 
 ---add to project list
-vim.api.nvim_create_user_command("ProjectAdd", core.add_project,
+vim.api.nvim_create_user_command("ProjectAdd",
+  function () core.add_project(true) end,
   { desc = "add project to session list" })
+
+---add dir to project list
+vim.api.nvim_create_user_command("ProjectAddDir",
+  function () core.add_project(false) end,
+  { desc = "add project dir to session list" })
 
 ---open project command
 vim.api.nvim_create_user_command("ProjectOpen",

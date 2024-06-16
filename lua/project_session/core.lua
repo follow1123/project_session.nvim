@@ -34,7 +34,8 @@ function M.save_project(path)
 end
 
 ---add project
-function M.add_project()
+---@param find_root boolean?
+function M.add_project(find_root)
   local file = vim.fs.normalize(vim.fn.expand("%:p"))
   if vim.fn.filereadable(file) ~= 1 and vim.fn.isdirectory(file) ~= 1 then
     vim.notify(
@@ -42,7 +43,12 @@ function M.add_project()
     return
   end
 
-  local root_dir = utils.find_root(vim.fn.fnamemodify(file, ":p:h"), config.options.project_patterns)
+  local dir = vim.fn.isdirectory(file) == 1 and
+    file or vim.fn.fnamemodify(file, ":p:h")
+
+  local root_dir = find_root and
+    utils.find_root(dir, config.options.project_patterns) or dir
+
   vim.api.nvim_set_current_dir(root_dir)
 
   local project = Project:from_path(config.options.dir, root_dir)

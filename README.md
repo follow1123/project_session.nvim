@@ -115,6 +115,12 @@ require("project_session").recent_projects()
 ProjectAdd
 ```
 
+* 直接将当前文件的所在的目录添加到项目列表
+
+```lua
+ProjectAddDir
+```
+
 * 打开项目
 
 > 接受一个参数作为项目路径，打开项目并使用目录树插件或netrw打开对应目录，如果路径是文件则直接打开  
