@@ -4,6 +4,8 @@ local Project = require("project_session.project")
 
 local M = {}
 
+local in_project = false
+
 ---@param session_file string
 local function mks_plugin(session_file)
   local file_tree_conf =  config.options.file_tree
@@ -21,16 +23,19 @@ end
 
 ---save session only save existing session
 ---@param path string?
-function M.save_project(path)
+---@param notify boolean?
+function M.save_project(path, notify)
+  if not in_project then return end
+
   local project = Project:from_path(config.options.dir, path or vim.fn.getcwd())
-  if not project:is_saved() then
+  if project:is_saved() then
+    project:save(config.options.session_opts, true)
+    mks_plugin(project.session_file)
+  elseif notify then
     vim.notify(
       "project not in session list, please add project first, path: " ..
       project.full_path, vim.log.levels.INFO)
-    return
   end
-  project:save(config.options.session_opts, true)
-  mks_plugin(project.session_file)
 end
 
 ---add project
@@ -54,6 +59,7 @@ function M.add_project(find_root)
   local project = Project:from_path(config.options.dir, root_dir)
   project:save(config.options.session_opts, true)
   mks_plugin(project.session_file)
+  in_project = true
 end
 
 ---check unsaved file
@@ -115,13 +121,7 @@ function M.open_project(project)
   if not before_open_project() then return end
 
   -- save current project
-  if not utils.is_empty_project() then
-    local cur_project = Project:from_path(config.options.dir, vim.fn.getcwd())
-    if cur_project:is_saved() then
-      cur_project:save(config.options.session_opts)
-      mks_plugin(project.session_file)
-    end
-  end
+  M.save_project(vim.fn.getcwd())
 
   vim.cmd.clearjumps() -- clear jump list
   vim.cmd("silent! %bwipeout!") -- force clear all buffer
@@ -144,10 +144,12 @@ function M.open_project(project)
     end
     vim.api.nvim_set_current_dir(project.full_path)
     project:save(config.options.session_opts)
+    in_project = true
     return
   end
 
   project:load()
+  in_project = true
 end
 
 ---@return table<Project>

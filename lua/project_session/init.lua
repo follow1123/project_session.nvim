@@ -23,7 +23,7 @@ function M.load_last()
 end
 
 ---save session only save existing session
-function M.save() core.save_project() end
+function M.save() core.save_project(nil, true) end
 
 ---add project
 function M.add() core.add_project(true) end

@@ -15,13 +15,6 @@ function M.match_visible_win(filetype)
   return false
 end
 
----@return boolean
-function M.is_empty_project()
-  local all_bufs = vim.api.nvim_list_bufs()
-  return #all_bufs == 1 and
-    vim.fn.filereadable(vim.api.nvim_buf_get_name(all_bufs[1])) ~= 1
-end
-
 ---replace path separator to %
 ---`/a/b/c` -> `%a%b%c`
 ---`C:/a/b/c` -> `C%%a%b%c` on windows
